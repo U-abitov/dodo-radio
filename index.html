@@ -8,7 +8,7 @@
     margin: 0;
     background-color: rgb(255, 78, 0);
     font-family: Arial, sans-serif;
-    color: white;
+    color: black;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -21,15 +21,17 @@
     font-size: 4rem;
     font-weight: 900;
     letter-spacing: 0.1em;
+    color: white;
   }
   #playerContainer {
-    background: rgba(0,0,0,0.25);
+    background: white;
     border-radius: 20px;
     padding: 30px 40px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
     text-align: center;
     max-width: 600px;
     width: 90vw;
+    color: black;
   }
   audio {
     display: none;
@@ -49,8 +51,8 @@
     margin-bottom: 15px;
   }
   button {
-    background: transparent;
-    border: 2.5px solid white;
+    background: black;
+    border: 2.5px solid black;
     border-radius: 50%;
     width: 70px;
     height: 70px;
@@ -64,7 +66,8 @@
   }
   button:hover {
     background-color: white;
-    color: rgb(255, 78, 0);
+    color: black;
+    border-color: black;
   }
   #timer {
     font-size: 1.5rem;
@@ -72,8 +75,16 @@
   }
   #logo {
     margin-top: 40px;
-    max-width: 180px;
-    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.7));
+    max-width: 240px; /* крупнее */
+    filter: none; /* убираем тень */
+  }
+  /* Кнопка перемешать: белый символ, но фон как у других кнопок */
+  #shuffleBtn {
+    color: white;
+  }
+  #shuffleBtn:hover {
+    background-color: white;
+    color: black;
   }
 </style>
 </head>
@@ -103,8 +114,7 @@
     musics.push(`music${i}.mp3`);
   }
   const ads = ['ad1.mp3', 'ad2.mp3'];
-  
-  // Функция для создания плейлиста с рекламой
+
   function createPlaylist() {
     const newPlaylist = [];
     let adIndex = 0;
@@ -118,7 +128,24 @@
     return newPlaylist;
   }
 
-  let playlist = createPlaylist();
+  function createShuffledPlaylist() {
+    const shuffledMusics = [...musics];
+    for (let i = shuffledMusics.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledMusics[i], shuffledMusics[j]] = [shuffledMusics[j], shuffledMusics[i]];
+    }
+    const newPlaylist = [];
+    let adIndex = 0;
+    for (let i = 0; i < shuffledMusics.length; i++) {
+      newPlaylist.push(shuffledMusics[i]);
+      if ((i + 1) % 5 === 0 && i !== shuffledMusics.length - 1) {
+        newPlaylist.push(ads[adIndex]);
+        adIndex = (adIndex + 1) % ads.length;
+      }
+    }
+    return newPlaylist;
+  }
+
   const player = document.getElementById('player');
   const currentTrackDisplay = document.getElementById('currentTrack');
   const playPauseBtn = document.getElementById('playPauseBtn');
@@ -128,11 +155,10 @@
   const restartBtn = document.getElementById('restartBtn');
   const timer = document.getElementById('timer');
 
+  let playlist = createPlaylist();
   let currentIndex = 0;
   let isPlaying = false;
   let isShuffle = false;
-  let shuffledPlaylist = [];
-  let playedIndexes = [];
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -153,8 +179,8 @@
   function playTrack(index) {
     if (index < 0) index = 0;
     if (index >= playlist.length) {
-      // Когда плейлист закончился — пересоздаем и играем заново
-      playlist = createPlaylist();
+      // При окончании плейлиста перезапускаем с учётом режима
+      playlist = isShuffle ? createShuffledPlaylist() : createPlaylist();
       currentIndex = 0;
       playTrack(currentIndex);
       return;
@@ -168,32 +194,11 @@
   }
 
   function playNext() {
-    if (isShuffle) {
-      playShuffled();
-    } else {
-      playTrack(currentIndex + 1);
-    }
+    playTrack(currentIndex + 1);
   }
 
   function playPrev() {
-    if (isShuffle) {
-      // В перемешивании назад пока просто первый трек
-      playTrack(0);
-    } else {
-      playTrack(currentIndex - 1);
-    }
-  }
-
-  function playShuffled() {
-    if (playedIndexes.length === playlist.length) {
-      playedIndexes = [];
-    }
-    let nextIndex;
-    do {
-      nextIndex = Math.floor(Math.random() * playlist.length);
-    } while (playedIndexes.includes(nextIndex));
-    playedIndexes.push(nextIndex);
-    playTrack(nextIndex);
+    playTrack(currentIndex - 1);
   }
 
   player.addEventListener('ended', playNext);
@@ -216,17 +221,16 @@
 
   shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
-    shuffleBtn.style.color = isShuffle ? "rgb(255, 78, 0)" : "white";
-    if (isShuffle) {
-      playedIndexes = [];
-    }
+    shuffleBtn.style.color = isShuffle ? "white" : "white"; // всегда белый символ
+    playlist = isShuffle ? createShuffledPlaylist() : createPlaylist();
+    currentIndex = 0;
+    playTrack(currentIndex);
   });
 
   restartBtn.addEventListener('click', () => {
     playTrack(currentIndex);
   });
 
-  // Стартуем с первого трека
   playTrack(0);
 </script>
 
