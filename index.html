@@ -16,17 +16,48 @@
     height: 100vh;
     user-select: none;
   }
+  h1 {
+    margin: 20px 0 30px 0;
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: white;
+  }
   #playerContainer {
     background: white;
     border-radius: 20px;
     padding: 30px 40px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
     text-align: center;
     max-width: 600px;
     width: 90vw;
+    color: black;
   }
   audio {
     display: none;
+  }
+  #currentTrack {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    height: 30px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #progressContainer {
+    width: 100%;
+    height: 8px;
+    background: #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: black;
+    border-radius: 4px;
+    transition: width 0.1s linear;
   }
   #controls {
     display: flex;
@@ -35,12 +66,12 @@
     margin-bottom: 15px;
   }
   button {
-    background: transparent;
+    background: black;
     border: 2.5px solid black;
     border-radius: 50%;
     width: 70px;
     height: 70px;
-    color: black;
+    color: white;
     font-size: 1.8rem;
     cursor: pointer;
     transition: background-color 0.25s, color 0.25s;
@@ -49,98 +80,38 @@
     justify-content: center;
   }
   button:hover {
-    background-color: black;
-    color: white;
-  }
-  #shuffleBtn {
+    background-color: white;
     color: black;
-  }
-  #shuffleBtn.active {
-    color: rgb(255, 78, 0);
+    border-color: black;
   }
   #timer {
     font-size: 1.5rem;
     letter-spacing: 0.05em;
-    margin-bottom: 15px;
   }
   #logo {
     margin-top: 40px;
-    max-width: 280px;
+    max-width: 240px;
+    filter: none;
   }
-  #progressContainer {
-    background: #ddd;
-    height: 6px;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-bottom: 15px;
+  #shuffleBtn {
+    color: white;
   }
-  #progressBar {
-    background: rgb(255, 78, 0);
-    height: 6px;
-    border-radius: 3px;
-    width: 0%;
-    transition: width 0.1s linear;
-  }
-  /* Анимация звука */
-  #audioAnimation {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 10px;
-  }
-  .bar {
-    width: 6px;
-    height: 20px;
-    background: rgb(255, 78, 0);
-    animation: bounce 1s infinite;
-    animation-timing-function: ease-in-out;
-    border-radius: 2px;
-  }
-  .bar:nth-child(1) {
-    animation-delay: 0s;
-  }
-  .bar:nth-child(2) {
-    animation-delay: 0.15s;
-  }
-  .bar:nth-child(3) {
-    animation-delay: 0.3s;
-  }
-  .bar:nth-child(4) {
-    animation-delay: 0.45s;
-  }
-  .bar:nth-child(5) {
-    animation-delay: 0.6s;
-  }
-  @keyframes bounce {
-    0%, 100% {height: 20px;}
-    50% {height: 40px;}
-  }
-  .hidden {
-    visibility: hidden;
-  }
-  #currentTrackDisplay {
-    font-weight: bold;
-    font-size: 1.3rem;
-    margin-bottom: 12px;
+  #shuffleBtn:hover {
+    background-color: white;
+    color: black;
   }
 </style>
 </head>
 <body>
 
+<h1>DODO FM</h1>
+
 <div id="playerContainer">
   <audio id="player" preload="auto"></audio>
-  <div id="audioAnimation" class="hidden">
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-  </div>
-  <div id="currentTrackDisplay"></div>
-  <div id="progressContainer">
+  <div id="currentTrack"></div>
+  <div id="progressContainer" title="Перемотать">
     <div id="progressBar"></div>
   </div>
-  <div id="timer">00:00 / 00:00</div>
   <div id="controls">
     <button id="prevBtn" title="Назад">&#9664;&#9664;</button>
     <button id="shuffleBtn" title="Перемешать">&#128256;</button>
@@ -148,106 +119,241 @@
     <button id="playPauseBtn" title="Плей/Пауза">&#9658;</button>
     <button id="nextBtn" title="Вперёд">&#9654;&#9654;</button>
   </div>
+  <div id="timer">00:00 / 00:00</div>
 </div>
 
 <img id="logo" src="logo.png" alt="DODO FM Лого">
 
 <script>
   const musicCount = 57;
+
+  // Объект соответствий: имя файла -> красивое название трека
+  const musicNames = {
+    'music1.mp3': 'A birthday to remember',
+    'music2.mp3': 'Air',
+    'music3.mp3': 'All you need is joy',
+    'music4.mp3': 'Beyond the horizon',
+    'music5.mp3': 'Bring me back',
+    'music6.mp3': 'Broke me summer',
+    'music7.mp3': 'Bye now',
+    'music8.mp3': 'Bye now Marilyn',
+    'music9.mp3': 'Cassette and Tv',
+    'music10.mp3': 'Celebrate this day',
+    'music11.mp3': 'Cheerfull happiness',
+    'music12.mp3': 'Chris euphoria',
+    'music13.mp3': 'Chris euphoria',
+    'music14.mp3': 'Cloud nine',
+    'music15.mp3': 'Crowded room',
+    'music16.mp3': 'Dancing alone',
+    'music17.mp3': 'Dancing in the rain',
+    'music18.mp3': 'Deep chill lounge',
+    'music19.mp3': 'Everyday',
+    'music20.mp3': 'Everything to me',
+    'music21.mp3': 'We were young',
+    'music22.mp3': 'Gaslighting',
+    'music23.mp3': 'Happy tickle',
+    'music24.mp3': 'I’m a puppet on strings',
+    'music25.mp3': 'Improvisation',
+    'music26.mp3': 'I’d like to know',
+    'music27.mp3': 'I’m not the one',
+    'music28.mp3': 'Just juzz',
+    'music29.mp3': 'Amazing',
+    'music30.mp3': 'Life’s good',
+    'music31.mp3': 'Lisbon story',
+    'music32.mp3': 'Cosmos',
+    'music33.mp3': 'Cosmos',
+    'music34.mp3': 'Lost in the crowd',
+    'music35.mp3': 'Midnight city light',
+    'music36.mp3': 'Midnight coffee',
+    'music37.mp3': 'Midnight echoes',
+    'music38.mp3': 'Mission trap',
+    'music39.mp3': 'No means',
+    'music40.mp3': 'Old radio',
+    'music41.mp3': 'Only one I want',
+    'music42.mp3': 'On the dance floor',
+    'music43.mp3': 'Pics will stay',
+    'music44.mp3': 'Queen of the couch',
+    'music45.mp3': 'Ride with me',
+    'music46.mp3': 'Say less',
+    'music47.mp3': 'Shifting seasons',
+    'music48.mp3': 'Snowflakes',
+    'music49.mp3': 'Sunrise serenade',
+    'music50.mp3': 'The animal birthday',
+    'music51.mp3': 'The sea is calling',
+    'music52.mp3': 'Under the mistletoe',
+    'music53.mp3': 'Saxophone',
+    'music54.mp3': 'Woke up to the ocean',
+    'music55.mp3': 'You are my hope',
+    'music56.mp3': 'You don’t know it',
+    'music57.mp3': 'Your loss looks good'
+  };
+
+  // Массив с названиями музыки (файлы)
   const musics = [];
   for (let i = 1; i <= musicCount; i++) {
     musics.push(`music${i}.mp3`);
   }
-  const trackNames = [
-    "A birthday to remember",
-    "Air",
-    "All you need is joy",
-    "Beyond the horizon",
-    "Bring me back",
-    "Broke me summer",
-    "Bye now",
-    "Bye now Marilyn",
-    "Cassette and Tv",
-    "Celebrate this day",
-    "Cheerfull happiness",
-    "Chris euphoria",
-    "Chris euphoria",
-    "Cloud nine",
-    "Crowded room",
-    "Dancing alone",
-    "Dancing in the rain",
-    "Deep chill lounge",
-    "Everyday",
-    "Everything to me",
-    "We were young",
-    "Gaslighting",
-    "Happy tickle",
-    "I’m a puppet on strings",
-    "Improvisation",
-    "I’d like to know",
-    "I’m not the one",
-    "Just juzz",
-    "Amazing",
-    "Life’s good",
-    "Lisbon story",
-    "Cosmos",
-    "Cosmos",
-    "Lost in the crowd",
-    "Midnight city light",
-    "Midnight coffee",
-    "Midnight echoes",
-    "Mission trap",
-    "No means",
-    "Old radio",
-    "Only one I want",
-    "On the dance floor",
-    "Pics will stay",
-    "Queen of the couch",
-    "Ride with me",
-    "Say less",
-    "Shifting seasons",
-    "Snowflakes",
-    "Sunrise serenade",
-    "The animal birthday",
-    "The sea is calling",
-    "Under the mistletoe",
-    "Saxophone",
-    "Woke up to the ocean",
-    "You are my hope",
-    "You don’t know it",
-    "Your loss looks good"
-  ];
 
+  // Рекламные треки и их названия
   const ads = ['ad1.mp3', 'ad2.mp3'];
-  let playlist = [];
-  let adIndex = 0;
-  for (let i = 0; i < musics.length; i++) {
-    playlist.push(musics[i]);
-    if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
-      playlist.push(ads[adIndex]);
-      adIndex = (adIndex + 1) % ads.length;
+  const adNames = {
+    'ad1.mp3': 'Hediye pizza',
+    'ad2.mp3': 'Ders'
+  };
+
+  // Функция создания плейлиста с рекламой каждые 5 треков
+  function createPlaylist() {
+    const newPlaylist = [];
+    let adIndex = 0;
+    for (let i = 0; i < musics.length; i++) {
+      newPlaylist.push(musics[i]);
+      if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
+        newPlaylist.push(ads[adIndex]);
+        adIndex = (adIndex + 1) % ads.length;
+      }
     }
+    return newPlaylist;
+  }
+
+  // Функция создания перемешанного плейлиста с рекламой
+  function createShuffledPlaylist() {
+    const shuffledMusics = [...musics];
+    for (let i = shuffledMusics.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledMusics[i], shuffledMusics[j]] = [shuffledMusics[j], shuffledMusics[i]];
+    }
+    const newPlaylist = [];
+    let adIndex = 0;
+    for (let i = 0; i < shuffledMusics.length; i++) {
+      newPlaylist.push(shuffledMusics[i]);
+      if ((i + 1) % 5 === 0 && i !== shuffledMusics.length - 1) {
+        newPlaylist.push(ads[adIndex]);
+        adIndex = (adIndex + 1) % ads.length;
+      }
+    }
+    return newPlaylist;
   }
 
   const player = document.getElementById('player');
+  const currentTrackDisplay = document.getElementById('currentTrack');
   const playPauseBtn = document.getElementById('playPauseBtn');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
-  const shuffleBtn = document.getElementById('shuffleBtn');
   const restartBtn = document.getElementById('restartBtn');
-  const timer = document.getElementById('timer');
+  const shuffleBtn = document.getElementById('shuffleBtn');
   const progressContainer = document.getElementById('progressContainer');
   const progressBar = document.getElementById('progressBar');
-  const audioAnimation = document.getElementById('audioAnimation');
-  const currentTrackDisplay = document.getElementById('currentTrackDisplay');
+  const timer = document.getElementById('timer');
 
+  // Начальный плейлист (не перемешанный)
+  let playlist = createPlaylist();
   let currentIndex = 0;
   let isPlaying = false;
   let isShuffle = false;
-  let playedIndexes = [];
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
- 
+  function updateTrackDisplay() {
+    const currentFile = playlist[currentIndex];
+    if (adNames[currentFile]) {
+      currentTrackDisplay.textContent = adNames[currentFile];
+    } else if (musicNames[currentFile]) {
+      currentTrackDisplay.textContent = musicNames[currentFile];
+    } else {
+      currentTrackDisplay.textContent = currentFile;
+    }
+  }
+
+  function loadTrack(index) {
+    currentIndex = index;
+    player.src = playlist[currentIndex];
+    player.load();
+    updateTrackDisplay();
+  }
+
+  function playTrack() {
+    player.play();
+    isPlaying = true;
+    playPauseBtn.innerHTML = '&#10073;&#10073;'; // || пауза
+  }
+
+  function pauseTrack() {
+    player.pause();
+    isPlaying = false;
+    playPauseBtn.innerHTML = '&#9658;'; // ► плей
+  }
+
+  function togglePlayPause() {
+    if (isPlaying) pauseTrack();
+    else playTrack();
+  }
+
+  function prevTrack() {
+    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    loadTrack(currentIndex);
+    playTrack();
+  }
+
+  function nextTrack() {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    loadTrack(currentIndex);
+    playTrack();
+  }
+
+  function restartTrack() {
+    player.currentTime = 0;
+  }
+
+  function shufflePlaylist() {
+    if (!isShuffle) {
+      playlist = createShuffledPlaylist();
+      isShuffle = true;
+      shuffleBtn.style.color = 'orange';
+    } else {
+      playlist = createPlaylist();
+      isShuffle = false;
+      shuffleBtn.style.color = 'white';
+    }
+    loadTrack(0);
+    playTrack();
+  }
+
+  // Обновление прогресс-бара и таймера
+  function updateProgress() {
+    if (player.duration) {
+      const progressPercent = (player.currentTime / player.duration) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      // Формат времени mm:ss
+      function formatTime(time) {
+        const m = Math.floor(time / 60);
+        const s = Math.floor(time % 60);
+        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+      timer.textContent = `${formatTime(player.currentTime)} / ${formatTime(player.duration)}`;
+    }
+  }
+
+  // Клик по прогрессу для перемотки
+  progressContainer.addEventListener('click', (e) => {
+    const rect = progressContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const newTime = (clickX / width) * player.duration;
+    player.currentTime = newTime;
+  });
+
+  // События
+  playPauseBtn.addEventListener('click', togglePlayPause);
+  prevBtn.addEventListener('click', prevTrack);
+  nextBtn.addEventListener('click', nextTrack);
+  restartBtn.addEventListener('click', restartTrack);
+  shuffleBtn.addEventListener('click', shufflePlaylist);
+
+  player.addEventListener('timeupdate', updateProgress);
+  player.addEventListener('ended', nextTrack);
+
+  // Инициализация
+  loadTrack(0);
+</script>
+
+</body>
+</html>
