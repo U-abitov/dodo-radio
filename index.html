@@ -1,46 +1,72 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Dodo Pizza Radyo</title>
+<meta charset="UTF-8" />
+<title>Плейлист с рекламой и управлением</title>
+<style>
+  body{font-family:Arial,sans-serif;padding:20px;}
+  #currentTrack{margin:15px 0;font-weight:bold;}
+  button{margin-right:10px;padding:8px 15px;font-size:16px;}
+</style>
 </head>
 <body>
-<audio id="player" controls autoplay></audio>
-
+<audio id="player" preload="auto"></audio>
+<div>
+  <button id="prevBtn">Назад</button>
+  <button id="playPauseBtn">Плей</button>
+  <button id="nextBtn">Следующий</button>
+</div>
+<div id="currentTrack">Загрузка...</div>
 <script>
-let musicCount = 57; // количество песен
-let adFiles = ["ad1.mp3", "ad2.mp3"]; // рекламные файлы
-let playlist = [];
-let songIndex = 0;
-let playCounter = 0;
-
-// Заполняем плейлист с рекламой каждые 10 песен
-for (let i = 1; i <= musicCount; i++) {
-    playlist.push(`music${i}.mp3`);
-    if (i % 10 === 0) {
-        let randomAd = adFiles[Math.floor(Math.random() * adFiles.length)];
-        playlist.push(randomAd);
+  const musicCount=57;
+  const musics=[];
+  for(let i=1;i<=musicCount;i++){musics.push(`music${i}.mp3`);}
+  const ads=['ad1.mp3','ad2.mp3'];
+  const playlist=[];
+  let adIndex=0;
+  for(let i=0;i<musics.length;i++){
+    playlist.push(musics[i]);
+    if((i+1)%5===0&&i!==musics.length-1){
+      playlist.push(ads[adIndex]);
+      adIndex=(adIndex+1)%ads.length;
     }
-}
-
-// HTML audio элемент
-let player = document.getElementById('player');
-
-// Функция для запуска следующего трека
-function playNext() {
-    player.src = playlist[songIndex];
+  }
+  const player=document.getElementById('player');
+  const currentTrackDisplay=document.getElementById('currentTrack');
+  const playPauseBtn=document.getElementById('playPauseBtn');
+  const prevBtn=document.getElementById('prevBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  let currentIndex=0;
+  let isPlaying=false;
+  function updateTrackDisplay(){
+    currentTrackDisplay.textContent=`Сейчас играет: ${playlist[currentIndex]}`;
+  }
+  function playTrack(index){
+    if(index<0)index=0;
+    if(index>=playlist.length){
+      player.pause();
+      isPlaying=false;
+      playPauseBtn.textContent='Плей';
+      currentTrackDisplay.textContent='Плейлист завершён';
+      return;
+    }
+    currentIndex=index;
+    player.src=playlist[currentIndex];
     player.play();
-    songIndex++;
-    if (songIndex >= playlist.length) {
-        songIndex = 0; // зацикливаем
-    }
-}
-
-// Когда трек заканчивается — включаем следующий
-player.addEventListener('ended', playNext);
-
-// Запускаем первую песню
-playNext();
+    isPlaying=true;
+    playPauseBtn.textContent='Пауза';
+    updateTrackDisplay();
+  }
+  function playNext(){playTrack(currentIndex+1);}
+  function playPrev(){playTrack(currentIndex-1);}
+  player.addEventListener('ended',playNext);
+  playPauseBtn.addEventListener('click',()=>{
+    if(isPlaying){player.pause();isPlaying=false;playPauseBtn.textContent='Плей';}
+    else{player.play();isPlaying=true;playPauseBtn.textContent='Пауза';}
+  });
+  nextBtn.addEventListener('click',playNext);
+  prevBtn.addEventListener('click',playPrev);
+  playTrack(0);
 </script>
 </body>
 </html>
