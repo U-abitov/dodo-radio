@@ -1,42 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Dodo Pizza Playlist</title>
+<meta charset="UTF-8">
+<title>Dodo Pizza Radyo</title>
 </head>
 <body>
-  <audio id="player" autoplay></audio>
+<audio id="player" controls autoplay></audio>
 
-  <script>
-    // Создаём массив треков
-    let playlist = [];
-    let adIndex = 0; // будем чередовать ad1 и ad2
+<script>
+let musicCount = 57; // количество песен
+let adFiles = ["ad1.mp3", "ad2.mp3"]; // рекламные файлы
+let playlist = [];
+let songIndex = 0;
+let playCounter = 0;
 
-    for (let i = 1; i <= 57; i++) {
-      playlist.push(`music${i}.mp3`);
-      if (i % 10 === 0 && i !== 57) { 
-        playlist.push(`ad${(adIndex % 2) + 1}.mp3`);
-        adIndex++;
-      }
+// Заполняем плейлист с рекламой каждые 10 песен
+for (let i = 1; i <= musicCount; i++) {
+    playlist.push(`music${i}.mp3`);
+    if (i % 10 === 0) {
+        let randomAd = adFiles[Math.floor(Math.random() * adFiles.length)];
+        playlist.push(randomAd);
     }
+}
 
-    let currentTrack = 0;
-    let player = document.getElementById('player');
+// HTML audio элемент
+let player = document.getElementById('player');
 
-    function playTrack(index) {
-      player.src = playlist[index];
-      player.play();
+// Функция для запуска следующего трека
+function playNext() {
+    player.src = playlist[songIndex];
+    player.play();
+    songIndex++;
+    if (songIndex >= playlist.length) {
+        songIndex = 0; // зацикливаем
     }
+}
 
-    player.addEventListener('ended', function () {
-      currentTrack++;
-      if (currentTrack >= playlist.length) {
-        currentTrack = 0; // Зацикливаем весь плейлист
-      }
-      playTrack(currentTrack);
-    });
+// Когда трек заканчивается — включаем следующий
+player.addEventListener('ended', playNext);
 
-    playTrack(currentTrack);
-  </script>
+// Запускаем первую песню
+playNext();
+</script>
 </body>
 </html>
