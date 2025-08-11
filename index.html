@@ -16,48 +16,17 @@
     height: 100vh;
     user-select: none;
   }
-  h1 {
-    margin: 20px 0 30px 0;
-    font-size: 4rem;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    color: white;
-  }
   #playerContainer {
     background: white;
     border-radius: 20px;
     padding: 30px 40px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    box-shadow: 0 0 20px rgba(0,0,0,0.25);
     text-align: center;
     max-width: 600px;
     width: 90vw;
-    color: black;
   }
   audio {
     display: none;
-  }
-  #currentTrack {
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    height: 30px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #progressContainer {
-    width: 100%;
-    height: 8px;
-    background: #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-bottom: 20px;
-  }
-  #progressBar {
-    height: 100%;
-    width: 0%;
-    background: black;
-    border-radius: 4px;
-    transition: width 0.1s linear;
   }
   #controls {
     display: flex;
@@ -66,12 +35,12 @@
     margin-bottom: 15px;
   }
   button {
-    background: black;
+    background: transparent;
     border: 2.5px solid black;
     border-radius: 50%;
     width: 70px;
     height: 70px;
-    color: white;
+    color: black;
     font-size: 1.8rem;
     cursor: pointer;
     transition: background-color 0.25s, color 0.25s;
@@ -80,39 +49,98 @@
     justify-content: center;
   }
   button:hover {
-    background-color: white;
+    background-color: black;
+    color: white;
+  }
+  #shuffleBtn {
     color: black;
-    border-color: black;
+  }
+  #shuffleBtn.active {
+    color: rgb(255, 78, 0);
   }
   #timer {
     font-size: 1.5rem;
     letter-spacing: 0.05em;
+    margin-bottom: 15px;
   }
   #logo {
     margin-top: 40px;
-    max-width: 240px; /* крупнее */
-    filter: none; /* убираем тень */
+    max-width: 280px;
   }
-  /* Кнопка перемешать: белый символ, но фон как у других кнопок */
-  #shuffleBtn {
-    color: white;
+  #progressContainer {
+    background: #ddd;
+    height: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-bottom: 15px;
   }
-  #shuffleBtn:hover {
-    background-color: white;
-    color: black;
+  #progressBar {
+    background: rgb(255, 78, 0);
+    height: 6px;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  /* Анимация звука */
+  #audioAnimation {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .bar {
+    width: 6px;
+    height: 20px;
+    background: rgb(255, 78, 0);
+    animation: bounce 1s infinite;
+    animation-timing-function: ease-in-out;
+    border-radius: 2px;
+  }
+  .bar:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .bar:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .bar:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .bar:nth-child(4) {
+    animation-delay: 0.45s;
+  }
+  .bar:nth-child(5) {
+    animation-delay: 0.6s;
+  }
+  @keyframes bounce {
+    0%, 100% {height: 20px;}
+    50% {height: 40px;}
+  }
+  .hidden {
+    visibility: hidden;
+  }
+  #currentTrackDisplay {
+    font-weight: bold;
+    font-size: 1.3rem;
+    margin-bottom: 12px;
   }
 </style>
 </head>
 <body>
 
-<h1>DODO FM</h1>
-
 <div id="playerContainer">
   <audio id="player" preload="auto"></audio>
-  <div id="currentTrack"></div>
-  <div id="progressContainer" title="Перемотать">
+  <div id="audioAnimation" class="hidden">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+  <div id="currentTrackDisplay"></div>
+  <div id="progressContainer">
     <div id="progressBar"></div>
   </div>
+  <div id="timer">00:00 / 00:00</div>
   <div id="controls">
     <button id="prevBtn" title="Назад">&#9664;&#9664;</button>
     <button id="shuffleBtn" title="Перемешать">&#128256;</button>
@@ -120,7 +148,6 @@
     <button id="playPauseBtn" title="Плей/Пауза">&#9658;</button>
     <button id="nextBtn" title="Вперёд">&#9654;&#9654;</button>
   </div>
-  <div id="timer">00:00 / 00:00</div>
 </div>
 
 <img id="logo" src="logo.png" alt="DODO FM Лого">
@@ -131,41 +158,78 @@
   for (let i = 1; i <= musicCount; i++) {
     musics.push(`music${i}.mp3`);
   }
+  const trackNames = [
+    "A birthday to remember",
+    "Air",
+    "All you need is joy",
+    "Beyond the horizon",
+    "Bring me back",
+    "Broke me summer",
+    "Bye now",
+    "Bye now Marilyn",
+    "Cassette and Tv",
+    "Celebrate this day",
+    "Cheerfull happiness",
+    "Chris euphoria",
+    "Chris euphoria",
+    "Cloud nine",
+    "Crowded room",
+    "Dancing alone",
+    "Dancing in the rain",
+    "Deep chill lounge",
+    "Everyday",
+    "Everything to me",
+    "We were young",
+    "Gaslighting",
+    "Happy tickle",
+    "I’m a puppet on strings",
+    "Improvisation",
+    "I’d like to know",
+    "I’m not the one",
+    "Just juzz",
+    "Amazing",
+    "Life’s good",
+    "Lisbon story",
+    "Cosmos",
+    "Cosmos",
+    "Lost in the crowd",
+    "Midnight city light",
+    "Midnight coffee",
+    "Midnight echoes",
+    "Mission trap",
+    "No means",
+    "Old radio",
+    "Only one I want",
+    "On the dance floor",
+    "Pics will stay",
+    "Queen of the couch",
+    "Ride with me",
+    "Say less",
+    "Shifting seasons",
+    "Snowflakes",
+    "Sunrise serenade",
+    "The animal birthday",
+    "The sea is calling",
+    "Under the mistletoe",
+    "Saxophone",
+    "Woke up to the ocean",
+    "You are my hope",
+    "You don’t know it",
+    "Your loss looks good"
+  ];
+
   const ads = ['ad1.mp3', 'ad2.mp3'];
-
-  function createPlaylist() {
-    const newPlaylist = [];
-    let adIndex = 0;
-    for (let i = 0; i < musics.length; i++) {
-      newPlaylist.push(musics[i]);
-      if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
-        newPlaylist.push(ads[adIndex]);
-        adIndex = (adIndex + 1) % ads.length;
-      }
+  let playlist = [];
+  let adIndex = 0;
+  for (let i = 0; i < musics.length; i++) {
+    playlist.push(musics[i]);
+    if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
+      playlist.push(ads[adIndex]);
+      adIndex = (adIndex + 1) % ads.length;
     }
-    return newPlaylist;
-  }
-
-  function createShuffledPlaylist() {
-    const shuffledMusics = [...musics];
-    for (let i = shuffledMusics.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledMusics[i], shuffledMusics[j]] = [shuffledMusics[j], shuffledMusics[i]];
-    }
-    const newPlaylist = [];
-    let adIndex = 0;
-    for (let i = 0; i < shuffledMusics.length; i++) {
-      newPlaylist.push(shuffledMusics[i]);
-      if ((i + 1) % 5 === 0 && i !== shuffledMusics.length - 1) {
-        newPlaylist.push(ads[adIndex]);
-        adIndex = (adIndex + 1) % ads.length;
-      }
-    }
-    return newPlaylist;
   }
 
   const player = document.getElementById('player');
-  const currentTrackDisplay = document.getElementById('currentTrack');
   const playPauseBtn = document.getElementById('playPauseBtn');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
@@ -174,100 +238,16 @@
   const timer = document.getElementById('timer');
   const progressContainer = document.getElementById('progressContainer');
   const progressBar = document.getElementById('progressBar');
+  const audioAnimation = document.getElementById('audioAnimation');
+  const currentTrackDisplay = document.getElementById('currentTrackDisplay');
 
-  let playlist = createPlaylist();
   let currentIndex = 0;
   let isPlaying = false;
   let isShuffle = false;
-  let isSeeking = false;
+  let playedIndexes = [];
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = Math.floor(sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
-  }
-
-  function updateTrackDisplay() {
-    // Просто имя файла, без "Сейчас играет:"
-    currentTrackDisplay.textContent = playlist[currentIndex];
-  }
-
-  function updateTimer() {
-    if (!isSeeking) {
-      const current = formatTime(player.currentTime);
-      const duration = player.duration ? formatTime(player.duration) : "00:00";
-      timer.textContent = `${current} / ${duration}`;
-      const progressPercent = (player.currentTime / player.duration) * 100 || 0;
-      progressBar.style.width = progressPercent + '%';
-    }
-  }
-
-  function playTrack(index) {
-    if (index < 0) index = 0;
-    if (index >= playlist.length) {
-      // При окончании плейлиста перезапускаем с учётом режима
-      playlist = isShuffle ? createShuffledPlaylist() : createPlaylist();
-      currentIndex = 0;
-      playTrack(currentIndex);
-      return;
-    }
-    currentIndex = index;
-    player.src = playlist[currentIndex];
-    player.play();
-    isPlaying = true;
-    playPauseBtn.innerHTML = "&#10074;&#10074;"; // пауза
-    updateTrackDisplay();
-  }
-
-  function playNext() {
-    playTrack(currentIndex + 1);
-  }
-
-  function playPrev() {
-    playTrack(currentIndex - 1);
-  }
-
-  player.addEventListener('ended', playNext);
-  player.addEventListener('timeupdate', updateTimer);
-
-  playPauseBtn.addEventListener('click', () => {
-    if (isPlaying) {
-      player.pause();
-      isPlaying = false;
-      playPauseBtn.innerHTML = "&#9658;";
-    } else {
-      player.play();
-      isPlaying = true;
-      playPauseBtn.innerHTML = "&#10074;&#10074;";
-    }
-  });
-
-  nextBtn.addEventListener('click', playNext);
-  prevBtn.addEventListener('click', playPrev);
-
-  shuffleBtn.addEventListener('click', () => {
-    isShuffle = !isShuffle;
-    shuffleBtn.style.color = "white"; // всегда белый символ
-    playlist = isShuffle ? createShuffledPlaylist() : createPlaylist();
-    currentIndex = 0;
-    playTrack(currentIndex);
-  });
-
-  restartBtn.addEventListener('click', () => {
-    playTrack(currentIndex);
-  });
-
-  // Перемотка
-  progressContainer.addEventListener('click', (e) => {
-    const rect = progressContainer.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const width = rect.width;
-    const seekTime = (clickX / width) * player.duration;
-    player.currentTime = seekTime;
-  });
-
-  playTrack(0);
-</script>
-
-</body>
-</html>
+ 
