@@ -44,6 +44,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  #progressContainer {
+    width: 100%;
+    height: 8px;
+    background: #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: black;
+    border-radius: 4px;
+    transition: width 0.1s linear;
+  }
   #controls {
     display: flex;
     justify-content: center;
@@ -94,7 +109,10 @@
 
 <div id="playerContainer">
   <audio id="player" preload="auto"></audio>
-  <div id="currentTrack">Загрузка...</div>
+  <div id="currentTrack"></div>
+  <div id="progressContainer" title="Перемотать">
+    <div id="progressBar"></div>
+  </div>
   <div id="controls">
     <button id="prevBtn" title="Назад">&#9664;&#9664;</button>
     <button id="shuffleBtn" title="Перемешать">&#128256;</button>
@@ -154,11 +172,14 @@
   const shuffleBtn = document.getElementById('shuffleBtn');
   const restartBtn = document.getElementById('restartBtn');
   const timer = document.getElementById('timer');
+  const progressContainer = document.getElementById('progressContainer');
+  const progressBar = document.getElementById('progressBar');
 
   let playlist = createPlaylist();
   let currentIndex = 0;
   let isPlaying = false;
   let isShuffle = false;
+  let isSeeking = false;
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -167,13 +188,18 @@
   }
 
   function updateTrackDisplay() {
-    currentTrackDisplay.textContent = `Сейчас играет: ${playlist[currentIndex]}`;
+    // Просто имя файла, без "Сейчас играет:"
+    currentTrackDisplay.textContent = playlist[currentIndex];
   }
 
   function updateTimer() {
-    const current = formatTime(player.currentTime);
-    const duration = player.duration ? formatTime(player.duration) : "00:00";
-    timer.textContent = `${current} / ${duration}`;
+    if (!isSeeking) {
+      const current = formatTime(player.currentTime);
+      const duration = player.duration ? formatTime(player.duration) : "00:00";
+      timer.textContent = `${current} / ${duration}`;
+      const progressPercent = (player.currentTime / player.duration) * 100 || 0;
+      progressBar.style.width = progressPercent + '%';
+    }
   }
 
   function playTrack(index) {
@@ -221,7 +247,7 @@
 
   shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
-    shuffleBtn.style.color = isShuffle ? "white" : "white"; // всегда белый символ
+    shuffleBtn.style.color = "white"; // всегда белый символ
     playlist = isShuffle ? createShuffledPlaylist() : createPlaylist();
     currentIndex = 0;
     playTrack(currentIndex);
@@ -229,6 +255,15 @@
 
   restartBtn.addEventListener('click', () => {
     playTrack(currentIndex);
+  });
+
+  // Перемотка
+  progressContainer.addEventListener('click', (e) => {
+    const rect = progressContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const seekTime = (clickX / width) * player.duration;
+    player.currentTime = seekTime;
   });
 
   playTrack(0);
