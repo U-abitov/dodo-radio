@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dodo Pizza FM</title>
+<style>
+  body{background:#0f0f12;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center;padding:28px}
+  h1{color:#ffcc00;margin:0 0 10px;font-size:34px}
+  #player{width:90%;margin-top:18px}
+  #bigStart{display:none;background:#ffcc00;color:#111;border:0;padding:14px 22px;border-radius:8px;font-size:18px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  #now{margin-top:12px;color:#ddd;font-size:14px}
+</style>
+</head>
+<body>
+  <h1>🎵 Dodo Pizza FM</h1>
+  <audio id="player" controls></audio>
+  <div id="now"></div>
+  <button id="bigStart">Başlat ▶ (Başlamak için tıklayın)</button>
+
+<script>
+/*
+  Настройка: укажи свои данные GitHub
+  - GITHUB_OWNER: имя пользователя/организации
+  - GITHUB_REPO: имя репозитория
+  - GITHUB_BRANCH: ветка (обычно "main" или "master")
+  Папки в репозитории: /music и /ads
+*/
+const GITHUB_OWNER = "YOUR_GITHUB_USERNAME";
+const GITHUB_REPO  = "YOUR_REPO_NAME";
+const GITHUB_BRANCH = "main"; // или "master"
+
+const apiBase = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents`;
+const rawBase = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/`;
+
+const player = document.getElementById('player');
+const bigStart = document.getElementById('bigStart');
+const now = document.getElementById('now');
+
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+async function getMp3List(folder){
+  try{
+    const res = await fetch(`${apiBase}/${folder}?ref=${GITHUB_BRANCH}`);
+    if(!res.ok) {
+      console.error('GitHub API error', res.status, await res.text());
+      return [];
+    }
+    const data = await res.json();
+    // data — массив объектов { name, path, download_url, ... }
+    const files = data
+      .filter(item => /\.(mp3|m4a|ogg|wav)$/i.test(item.name))
+      .map(item => rawBase + item.path);
+    return files;
+  } catch(e){
+    console.error('Ошибка получения списка файлов:', e);
+    return [];
+  }
+}
+
+(async function init(){
+  now.textContent = 'Загружаю списки треков...';
+  const music = await getMp3List('music');
+  const ads = await getMp3List('ads');
+
+  if(music.length === 0 && ads.length === 0){
+    now.textContent = 'Не найдено ни одного audio-файла в папках /music или /ads.';
+    return;
+  }
+  if(music.length === 0){
+    now.textContent = 'В /music нет песен — сайт будет проигрывать только рекламу.';
+  }
+
+  function buildPlaylist(){
+    // shuffle music order
+    const mus = [...music];
+    shuffleArray(mus);
+
+    const pl = [];
+    let count = 0;
+    for(let i=0;i<mus.length;i++){
+      pl.push({url: mus[i], label: decodeURIComponent(mus[i].split('/').pop())});
+      count++;
+      if(count % 10 === 0 && ads.length > 0){
+        const a = ads[Math.floor(Math.random()*ads.length)];
+        pl.push({url: a, label: decodeURIComponent(a.split('/').pop()), isAd: true});
+      }
+    }
+    // если музыки нет, но есть реклама — крутим рекламу по кругу
+    if(pl.length === 0 && ads.length > 0){
+      for(let a of ads){
+        pl.push({url: a, label: decodeURIComponent(a.split('/').pop()), isAd:true});
+      }
+    }
+    return pl;
+  }
+
+  let playlist = buildPlaylist();
+  let idx = 0;
+
+  function setNowText(item){
+    now.textContent = (item.isAd ? 'Реклама — ' : 'Сейчас играет — ') + item.label;
+  }
+
+  async function tryPlay(i){
+    const item = playlist[i];
+    player.src = item.url;
+    setNowText(item);
+    try {
+      await player.play();
+      bigStart.style.display = 'none';
+    } catch(e) {
+      // autoplay заблокирован — покажем большую кнопку
+      bigStart.style.display = 'inline-block';
+    }
+  }
+
+  player.addEventListener('ended', async () => {
+    idx++;
+    if(idx >= playlist.length){
+      playlist = buildPlaylist(); // перестроим — новая рулетка
+      idx = 0;
+    }
+    await tryPlay(idx);
+  });
+
+  // Попытка автозапуска
+  await tryPlay(idx);
+
+  // кнопка старта, если браузер блокирует autoplay
+  bigStart.addEventListener('click', async () => {
+    try {
+      await player.play();
+      bigStart.style.display = 'none';
+    } catch(e){
+      console.error(e);
+    }
+  });
+
+  now.textContent = 'Готово — плеер загружен. Если звук не начался автоматически — нажмите «Başlat».';
+})();
+</script>
+</body>
+</html>
