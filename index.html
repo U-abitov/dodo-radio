@@ -2,11 +2,41 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Music Player</title>
+  <title>Dodo Pizza Playlist</title>
 </head>
 <body>
-  <audio controls autoplay loop>
-    <source src="music1.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="player" autoplay></audio>
+
+  <script>
+    // Создаём массив треков
+    let playlist = [];
+    let adIndex = 0; // будем чередовать ad1 и ad2
+
+    for (let i = 1; i <= 57; i++) {
+      playlist.push(`music${i}.mp3`);
+      if (i % 10 === 0 && i !== 57) { 
+        playlist.push(`ad${(adIndex % 2) + 1}.mp3`);
+        adIndex++;
+      }
+    }
+
+    let currentTrack = 0;
+    let player = document.getElementById('player');
+
+    function playTrack(index) {
+      player.src = playlist[index];
+      player.play();
+    }
+
+    player.addEventListener('ended', function () {
+      currentTrack++;
+      if (currentTrack >= playlist.length) {
+        currentTrack = 0; // Зацикливаем весь плейлист
+      }
+      playTrack(currentTrack);
+    });
+
+    playTrack(currentTrack);
+  </script>
 </body>
 </html>
