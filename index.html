@@ -103,16 +103,22 @@
     musics.push(`music${i}.mp3`);
   }
   const ads = ['ad1.mp3', 'ad2.mp3'];
-  let playlist = [];
-  let adIndex = 0;
-  for (let i = 0; i < musics.length; i++) {
-    playlist.push(musics[i]);
-    if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
-      playlist.push(ads[adIndex]);
-      adIndex = (adIndex + 1) % ads.length;
+  
+  // Функция для создания плейлиста с рекламой
+  function createPlaylist() {
+    const newPlaylist = [];
+    let adIndex = 0;
+    for (let i = 0; i < musics.length; i++) {
+      newPlaylist.push(musics[i]);
+      if ((i + 1) % 5 === 0 && i !== musics.length - 1) {
+        newPlaylist.push(ads[adIndex]);
+        adIndex = (adIndex + 1) % ads.length;
+      }
     }
+    return newPlaylist;
   }
 
+  let playlist = createPlaylist();
   const player = document.getElementById('player');
   const currentTrackDisplay = document.getElementById('currentTrack');
   const playPauseBtn = document.getElementById('playPauseBtn');
@@ -147,11 +153,10 @@
   function playTrack(index) {
     if (index < 0) index = 0;
     if (index >= playlist.length) {
-      player.pause();
-      isPlaying = false;
-      playPauseBtn.innerHTML = "&#9658;";
-      currentTrackDisplay.textContent = "Плейлист завершён";
-      timer.textContent = "00:00 / 00:00";
+      // Когда плейлист закончился — пересоздаем и играем заново
+      playlist = createPlaylist();
+      currentIndex = 0;
+      playTrack(currentIndex);
       return;
     }
     currentIndex = index;
@@ -212,12 +217,16 @@
   shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
     shuffleBtn.style.color = isShuffle ? "rgb(255, 78, 0)" : "white";
+    if (isShuffle) {
+      playedIndexes = [];
+    }
   });
 
   restartBtn.addEventListener('click', () => {
     playTrack(currentIndex);
   });
 
+  // Стартуем с первого трека
   playTrack(0);
 </script>
 
